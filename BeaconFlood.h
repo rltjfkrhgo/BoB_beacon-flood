@@ -3,53 +3,63 @@
 #ifndef _BEACON_FLOOD_H_
 #define _BEACON_FLOOD_H_
 
-#include <sys/types.h>
+#include <string>
 #include <cstring>
 #include <random>
+#include <fstream>
 
 #pragma pack(push, 1)
 struct dot11_management_tag
 {
-    const static u_int8_t  NUM_BSSID = 0x00;
-    const static u_int8_t  NUM_SUPPORTED_RATES = 0x01;
-    const static u_int8_t  NUM_DS_PARAMETER_SET = 0x03;
-    const static u_int8_t  NUM_CF_PARAMETER_SET = 0x04;
-    const static u_int8_t  NUM_TIM = 0x05;
+    const static uint8_t  NUM_BSSID = 0x00;
+    const static uint8_t  NUM_SUPPORTED_RATES = 0x01;
+    const static uint8_t  NUM_DS_PARAMETER_SET = 0x03;
+    const static uint8_t  NUM_CF_PARAMETER_SET = 0x04;
+    const static uint8_t  NUM_TIM = 0x05;
 
-    u_int8_t  num;
-    u_int8_t  len;
-    u_int8_t  data;  // 시작 지점
+    uint8_t  num;
+    uint8_t  len;
+    uint8_t  data;  // 시작 지점
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
 struct beacon_frame
 {
-    static const u_int8_t  TYPE = 0x80;
+    static const uint8_t  TYPE = 0x80;
 
-    u_int8_t   radiotab[12];
-    u_int8_t   type;
-    u_int8_t   flags;
-    u_int8_t   duration[2];
-    u_int8_t   receiver[6];
-    u_int8_t   transmitter[6];
-    u_int8_t   bssid[6];
-    u_int16_t  fragment:4;
-    u_int16_t  sequence:12;
+    uint8_t   radiotab[12];
+    uint8_t   type;
+    uint8_t   flags;
+    uint8_t   duration[2];
+    uint8_t   receiver[6];
+    uint8_t   transmitter[6];
+    uint8_t   bssid[6];
+    uint16_t  fragment:4;
+    uint16_t  sequence:12;
     // management
     // fixed
-    u_int64_t  timestamp;
-    u_int16_t  interval;
-    u_int16_t  capabilities;
+    uint64_t  timestamp;
+    uint16_t  interval;
+    uint16_t  capabilities;
     // tagged
-    u_int8_t   tag;  // tag 시작 지점
+    uint8_t   tag;  // tag 시작 지점
 };
 #pragma pack(pop)
 
 typedef struct dot11_management_tag Dot11Tag;
 typedef struct beacon_frame BeaconFrame;
 
-BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLen);
-void deleteBeaconFrame(BeaconFrame* beacon);
+BeaconFrame* newBeaconFrame(const char* ssid, uint8_t ssidLen, size_t* beaconLen);
+
+typedef struct
+{
+    BeaconFrame*  beacon;
+    size_t     beaconLen;
+}
+BeaconInfo;
+
+void makeBeacons(const char* filename, std::vector<BeaconInfo>& beacons);
+void deleteBeacons(std::vector<BeaconInfo>& beacons);
 
 #endif

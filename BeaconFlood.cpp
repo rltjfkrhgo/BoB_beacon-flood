@@ -1,18 +1,20 @@
 // BeaconFlood.cpp
 // http://www.ktword.co.kr/abbr_view.php?m_temp1=2319
+// mdk3 참고
 
 #include "BeaconFlood.h"
 
 // beaconLen: 만들어진 beacon의 길이
-BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLen)
+BeaconFrame* newBeaconFrame(const char* ssid, uint8_t ssidLen, size_t* beaconLen)
 {
     size_t ssidTagLen = sizeof(Dot11Tag)-1 + ssidLen;  // ssid tag
     size_t rateTagLen = sizeof(Dot11Tag)-1 + 4;        // supported rates tag
     size_t   dsTagLen = sizeof(Dot11Tag)-1 + 1;        // DS parameter set
     size_t   cfTagLen = sizeof(Dot11Tag)-1 + 6;        // CF parameter set
-    size_t  timTagLen = sizeof(Dot11Tag)-1 + 4;
+    size_t  timTagLen = sizeof(Dot11Tag)-1 + 4;        // tim tag
+    // 총 beacon frame 길이
     *beaconLen = sizeof(BeaconFrame)-1 + 
-                ssidTagLen + rateTagLen + dsTagLen + cfTagLen + timTagLen;  // 총 beacon frame 길이
+                 ssidTagLen + rateTagLen + dsTagLen + cfTagLen + timTagLen;
 
     BeaconFrame* beacon = (BeaconFrame*)new char[*beaconLen];
     memset(beacon, 0, *beaconLen);
@@ -22,7 +24,6 @@ BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLe
     beacon->radiotab[5] = 0x80;
     beacon->radiotab[8] = 0x02;
     beacon->radiotab[10] = 0x18;
-
 
     beacon->type = BeaconFrame::TYPE;
     memset(beacon->receiver, 0xff, 6);  // broadcast
@@ -52,12 +53,14 @@ BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLe
     Dot11Tag* rateTag = (Dot11Tag*)( &(ssidTag->data) + ssidTag->len );
     rateTag->num = Dot11Tag::NUM_SUPPORTED_RATES;
     rateTag->len = 0x04;
-    *(u_int32_t*)&(rateTag->data) = 0x968b8482;
+    *(uint32_t*)&(rateTag->data) = 0x968b8482;
 
+    // 채널
     Dot11Tag* dsTag = (Dot11Tag*)( &(rateTag->data) + rateTag->len );
     dsTag->num = Dot11Tag::NUM_DS_PARAMETER_SET;
     dsTag->len = 0x01;
-    dsTag->data = 0x05;
+    std::uniform_int_distribution<int> dis2(1, 11);
+    dsTag->data = dis2(gen);
 
     Dot11Tag* cfTag = (Dot11Tag*)( &(dsTag->data) + dsTag->len );
     cfTag->num = Dot11Tag::NUM_CF_PARAMETER_SET;
@@ -73,7 +76,31 @@ BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLe
     return beacon;
 }
 
-void deleteBeaconFrame(BeaconFrame* beacon)
+void makeBeacons(const char* filename, std::vector<BeaconInfo>& list)
 {
-    delete[] beacon;
+    std::ifstream  fin(filename);
+
+    while (!fin.eof())
+    {
+		std::string  ssid;
+		fin >> ssid;
+        
+        if(ssid.length() < 1)
+            continue;
+        
+        BeaconInfo info;
+        info.beacon = newBeaconFrame(ssid.c_str(), ssid.length(), &info.beaconLen);
+        list.push_back(info);
+	}
+
+    fin.close();
+}
+
+void deleteBeacons(std::vector<BeaconInfo>& beacons)
+{
+    for(auto it = beacons.begin(); it != beacons.end(); it++)
+    {
+        delete it->beacon;
+        it->beacon = nullptr;
+    }
 }

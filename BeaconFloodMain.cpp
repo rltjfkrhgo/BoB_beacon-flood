@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <pcap.h>
 #include <unistd.h>  // usleep()
-#include <string>
 #include "BeaconFlood.h"
 
 void usage() {
@@ -13,16 +12,13 @@ void usage() {
 
 int main(int argc, char* argv[])
 {
-    std::string str = "singasong";
-    size_t beaconLen;
-    BeaconFrame* beacon = newBeaconFrame(str.c_str(), str.length(), &beaconLen);
-
-/*
     if (argc != 3) {
         usage();
         return -1;
     }
-    */
+
+    std::vector<BeaconInfo> beacons;
+    makeBeacons(argv[2], beacons);
 
     char* dev = argv[1];
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -34,21 +30,23 @@ int main(int argc, char* argv[])
 
     while(true)
     {
-        int res = pcap_sendpacket(
-            handle, reinterpret_cast<const u_char*>( beacon ), beaconLen);
-        if (res != 0) {
-            fprintf(stderr, "pcap_sendpacket return %d error=%s\n", res, pcap_geterr(handle));
-        }
-        else
+        for(auto it = beacons.begin(); it != beacons.end(); it++)
         {
-            printf("sending beacon frame...\n");
+            int res = pcap_sendpacket(
+                handle, reinterpret_cast<const u_char*>( it->beacon ), it->beaconLen);
+            if (res != 0) {
+                fprintf(stderr, "pcap_sendpacket return %d error=%s\n", res, pcap_geterr(handle));
+            }
+            else
+            {
+                printf("sending beacon frame...\n");
+            }
         }
         usleep(100000);
     }
 
     pcap_close(handle);
-    deleteBeaconFrame(beacon);
-    beacon = nullptr;
+    deleteBeacons(beacons);
 
     return 0;
 }
