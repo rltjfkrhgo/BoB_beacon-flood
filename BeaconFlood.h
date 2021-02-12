@@ -5,7 +5,7 @@
 
 #include <sys/types.h>
 #include <cstring>
-#include <ctime>
+#include <random>
 
 #pragma pack(push, 1)
 struct dot11_management_tag
@@ -13,6 +13,8 @@ struct dot11_management_tag
     const static u_int8_t  NUM_BSSID = 0x00;
     const static u_int8_t  NUM_SUPPORTED_RATES = 0x01;
     const static u_int8_t  NUM_DS_PARAMETER_SET = 0x03;
+    const static u_int8_t  NUM_CF_PARAMETER_SET = 0x04;
+    const static u_int8_t  NUM_TIM = 0x05;
 
     u_int8_t  num;
     u_int8_t  len;
@@ -25,7 +27,7 @@ struct beacon_frame
 {
     static const u_int8_t  TYPE = 0x80;
 
-    u_int8_t   radiotab[24];
+    u_int8_t   radiotab[12];
     u_int8_t   type;
     u_int8_t   flags;
     u_int8_t   duration[2];
@@ -48,7 +50,6 @@ typedef struct dot11_management_tag Dot11Tag;
 typedef struct beacon_frame BeaconFrame;
 
 BeaconFrame* newBeaconFrame(const char* ssid, u_int8_t ssidLen, size_t* beaconLen);
-void updateBeaconFrame(BeaconFrame* beacon);
 void deleteBeaconFrame(BeaconFrame* beacon);
 
 #endif

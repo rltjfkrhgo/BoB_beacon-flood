@@ -13,7 +13,7 @@ void usage() {
 
 int main(int argc, char* argv[])
 {
-    std::string str = "test";
+    std::string str = "singasong";
     size_t beaconLen;
     BeaconFrame* beacon = newBeaconFrame(str.c_str(), str.length(), &beaconLen);
 
@@ -42,12 +42,13 @@ int main(int argc, char* argv[])
         else
         {
             printf("sending beacon frame...\n");
-            updateBeaconFrame(beacon);
         }
         usleep(100000);
     }
 
     pcap_close(handle);
+    deleteBeaconFrame(beacon);
+    beacon = nullptr;
 
     return 0;
 }
