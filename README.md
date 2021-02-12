@@ -1,1 +1,1 @@
-# BoB_beacon-flood
+# beacon-flood
