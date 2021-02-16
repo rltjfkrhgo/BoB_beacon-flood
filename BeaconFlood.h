@@ -17,9 +17,9 @@ struct dot11_management_tag
     const static uint8_t  NUM_CF_PARAMETER_SET = 0x04;
     const static uint8_t  NUM_TIM = 0x05;
 
-    uint8_t  num;
+    uint8_t  id;
     uint8_t  len;
-    uint8_t  data;  // 시작 지점
+    uint8_t* data() { return (uint8_t*)(this+1); }  // 시작 지점 주소 리턴
 };
 #pragma pack(pop)
 
@@ -28,7 +28,7 @@ struct beacon_frame
 {
     static const uint8_t  TYPE = 0x80;
 
-    uint8_t   radiotab[12];
+    uint8_t   radiotap[12];
     uint8_t   type;
     uint8_t   flags;
     uint8_t   duration[2];
@@ -43,7 +43,7 @@ struct beacon_frame
     uint16_t  interval;
     uint16_t  capabilities;
     // tagged
-    uint8_t   tag;  // tag 시작 지점
+    uint8_t*  tag() { return (uint8_t*)(this+1); }  // tag 시작 지점 주소 리턴
 };
 #pragma pack(pop)
 

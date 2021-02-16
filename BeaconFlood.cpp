@@ -1,4 +1,5 @@
 // BeaconFlood.cpp
+// 정보통신기술용어해설
 // http://www.ktword.co.kr/abbr_view.php?m_temp1=2319
 // mdk3 참고
 
@@ -7,23 +8,23 @@
 // beaconLen: 만들어진 beacon의 길이
 BeaconFrame* newBeaconFrame(const char* ssid, uint8_t ssidLen, size_t* beaconLen)
 {
-    size_t ssidTagLen = sizeof(Dot11Tag)-1 + ssidLen;  // ssid tag
-    size_t rateTagLen = sizeof(Dot11Tag)-1 + 4;        // supported rates tag
-    size_t   dsTagLen = sizeof(Dot11Tag)-1 + 1;        // DS parameter set
-    size_t   cfTagLen = sizeof(Dot11Tag)-1 + 6;        // CF parameter set
-    size_t  timTagLen = sizeof(Dot11Tag)-1 + 4;        // tim tag
+    size_t ssidTagLen = sizeof(Dot11Tag) + ssidLen;  // ssid tag
+    size_t rateTagLen = sizeof(Dot11Tag) + 4;        // supported rates tag
+    size_t   dsTagLen = sizeof(Dot11Tag) + 1;        // DS parameter set
+    size_t   cfTagLen = sizeof(Dot11Tag) + 6;        // CF parameter set
+    size_t  timTagLen = sizeof(Dot11Tag) + 4;        // tim tag
     // 총 beacon frame 길이
-    *beaconLen = sizeof(BeaconFrame)-1 + 
+    *beaconLen = sizeof(BeaconFrame) + 
                  ssidTagLen + rateTagLen + dsTagLen + cfTagLen + timTagLen;
 
     BeaconFrame* beacon = (BeaconFrame*)new char[*beaconLen];
     memset(beacon, 0, *beaconLen);
 
-    beacon->radiotab[2] = 0x0c;   // radiotap length
-    beacon->radiotab[4] = 0x04;
-    beacon->radiotab[5] = 0x80;
-    beacon->radiotab[8] = 0x02;
-    beacon->radiotab[10] = 0x18;
+    beacon->radiotap[2] = 0x0c;   // radiotap length
+    beacon->radiotap[4] = 0x04;
+    beacon->radiotap[5] = 0x80;
+    beacon->radiotap[8] = 0x02;
+    beacon->radiotap[10] = 0x18;
 
     beacon->type = BeaconFrame::TYPE;
     memset(beacon->receiver, 0xff, 6);  // broadcast
@@ -43,35 +44,35 @@ BeaconFrame* newBeaconFrame(const char* ssid, uint8_t ssidLen, size_t* beaconLen
     beacon->interval = 100;       // ms 단위
     beacon->capabilities = 0x01;  // ESS 즉 AP
 
-    Dot11Tag* ssidTag = (Dot11Tag*)&(beacon->tag);
-    ssidTag->num = Dot11Tag::NUM_BSSID;
+    Dot11Tag* ssidTag = (Dot11Tag*)beacon->tag();
+    ssidTag->id = Dot11Tag::NUM_BSSID;
     ssidTag->len = ssidLen;
-    memcpy(&(ssidTag->data), ssid, ssidLen);
+    memcpy(ssidTag->data(), ssid, ssidLen);
 
     // ssid data 시작 지점부터 ssid 길이 만큼 건너 뛴 곳이
     // rate tag 시작 주소가 된다.
-    Dot11Tag* rateTag = (Dot11Tag*)( &(ssidTag->data) + ssidTag->len );
-    rateTag->num = Dot11Tag::NUM_SUPPORTED_RATES;
+    Dot11Tag* rateTag = (Dot11Tag*)( ssidTag->data() + ssidTag->len );
+    rateTag->id = Dot11Tag::NUM_SUPPORTED_RATES;
     rateTag->len = 0x04;
-    *(uint32_t*)&(rateTag->data) = 0x968b8482;
+    *(uint32_t*)(rateTag->data()) = 0x968b8482;
 
     // 채널
-    Dot11Tag* dsTag = (Dot11Tag*)( &(rateTag->data) + rateTag->len );
-    dsTag->num = Dot11Tag::NUM_DS_PARAMETER_SET;
+    Dot11Tag* dsTag = (Dot11Tag*)( rateTag->data() + rateTag->len );
+    dsTag->id = Dot11Tag::NUM_DS_PARAMETER_SET;
     dsTag->len = 0x01;
     std::uniform_int_distribution<int> dis2(1, 11);
-    dsTag->data = dis2(gen);
+    *(dsTag->data()) = dis2(gen);
 
-    Dot11Tag* cfTag = (Dot11Tag*)( &(dsTag->data) + dsTag->len );
-    cfTag->num = Dot11Tag::NUM_CF_PARAMETER_SET;
+    Dot11Tag* cfTag = (Dot11Tag*)( dsTag->data() + dsTag->len );
+    cfTag->id = Dot11Tag::NUM_CF_PARAMETER_SET;
     cfTag->len = 0x06;
-    (&(cfTag->data))[0] = 0x01;
-    (&(cfTag->data))[1] = 0x02;
+    cfTag->data()[0] = 0x01;
+    cfTag->data()[1] = 0x02;
 
-    Dot11Tag* timTag = (Dot11Tag*)( &(cfTag->data) + cfTag->len );
-    timTag->num = Dot11Tag::NUM_TIM;
+    Dot11Tag* timTag = (Dot11Tag*)( cfTag->data() + cfTag->len );
+    timTag->id = Dot11Tag::NUM_TIM;
     timTag->len = 0x04;
-    (&(timTag->data))[1] = 0x01;
+    timTag->data()[1] = 0x01;
 
     return beacon;
 }
